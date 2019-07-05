@@ -1,29 +1,68 @@
-
 "use strict";
 
-//app.js
-const express = require('express');
-const bodyParser = require('body-parser');
-const url = require('./routes/url.route'); 
-const app = express();
+/*
+* Todo:
+* Add users, auth, authz
+* Login with Twitter
+* Make it proper HTTP, use redirects.
+* 
+*/
 
 
-// Set up mongoose connection
-const mongoose = require('mongoose');
-let dev_db_url = 'mongodb://localhost/shorty';
-let mongoDB = process.env.MONGODB_URI || dev_db_url;
-mongoose.connect(mongoDB, { useNewUrlParser: true });
-mongoose.Promise = global.Promise;
-let db = mongoose.connection;
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+const Emitter = require('events').EventEmitter;
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: false}));
+class Shorty {
+  constructor(port) {
+    //app.js
+    this.express = require("express");
+    this.bodyParser = require("body-parser");
+    this.url = require("./routes/url.route");
+    this.app = this.express();
+    this.mongoose = require("mongoose");
+    this.em = new Emitter();
+    this.port = port;
+  }
+
+  async startup() {
+    try {
+      // Set up mongoose connection
+      const dev_db_url = "mongodb://localhost/shorty";
+      const mongoDB = process.env.MONGODB_URI || dev_db_url;
+
+      this.mongoose.connect(mongoDB, { useNewUrlParser: true });
+      this.mongoose.Promise = global.Promise;
+      this.db = this.mongoose.connection;
+      this.em.emit('dbconnOK','Database connection established OK');
+    } catch(err) {
+      console.warn(err);
+      process.exit(1);
+    }
+    try { 
+      this.app.use(this.bodyParser.json());
+      this.app.use(this.bodyParser.urlencoded({ extended: false }));
+
+      this.app.use("/", this.url);
+      // Shutdown on event:
+      this.em.on('serverShutdown', () => { this.shutdown() });
+      // Fire up listen, keep the return val around (used in shutdown)
+      this.runningApp = await this.app.listen(this.port);
+      console.log("We're up and running");
+      this.em.emit('serverStarted','Server is started');
+
+     } catch (err) {
+        // failed to listen.
+        console.warn("Failed to start express: ", err);
+      }
+  }
+  async shutdown() {
+    this.runningApp.close();
+
+    setTimeout(() =>{ 
+      console.warn("Failing to exit cleanly.");
+      process.exit(1) }, 1000);
+    
+  }
+}
 
 
-app.use('/', url);
-let port = 3000;
-
-app.listen(port, () => {
-    console.log('Server is up and running on port numner ' + port);
-});
+module.exports = Shorty;
