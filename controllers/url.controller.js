@@ -18,7 +18,7 @@ exports.url_create = function (req, res, next) {
         if (err) {
             return next(err); 
         }
-        res.send('URL Created successfully')
+        res.send(url);
     })
 
 };
@@ -27,7 +27,7 @@ exports.get_url = function (req, res, next) {
     console.log("Get URL called: ",req.params.key);
     Url.findOne( {'key': req.params.key}, function (err, url) {
         if (err) return next(err);
-        res.send(url);
+        res.redirect(301, url.url); // 301 means permanent redirect.
     })
 };
 
@@ -35,7 +35,8 @@ exports.url_update = function (req, res, next) {
     // WTF is $set:
     Url.updateOne({'key': req.params.key }, {$set: req.body}, function (err, url) {
         if (err) return next(err);
-        res.send('URL updated: ', url.key, '=>', url.url);
+        res.send(url);
+
     });
 };
 
@@ -44,6 +45,6 @@ exports.url_delete = function (req, res, next) {
 
     Url.deleteOne({'key': req.params.key}, function (err) {
         if (err) return next(err);
-        res.send('Deleted successfully!');
+        res.send({'message':'Deleted successfully'});
     })
 };

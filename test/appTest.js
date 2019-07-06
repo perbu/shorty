@@ -66,7 +66,7 @@ describe("Tests", function() {
         .get("/snaffel")
         .expect(200)
         .end(function(err, res) {
-          res.status.should.equal(200);
+          res.status.should.equal(302);
           done();
         });
     });
