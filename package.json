@@ -2,11 +2,12 @@
   "name": "shorty",
   "version": "1.0.0",
   "description": "URL Shortener",
-  "main": "app.js",
+  "main": "shorty.js",
   "scripts": {
     "test": "nyc mocha || true",
     "start": "nodemon app.js",
-    "lint": "eslint *.js test/*.js models/*.js  controllers/*.js routes/*.js"
+    "lint": "eslint *.js test/*.js models/*.js  controllers/*.js routes/*.js",
+    "coverage": "nyc npm run test"
   },
   "author": "",
   "license": "ISC",
@@ -26,8 +27,9 @@
     "chai": "^4.2.0",
     "eslint": "^6.0.1",
     "mocha": "^6.1.4",
+    "nyc": "^14.1.1",
     "should": "^13.2.3",
     "supertest": "^4.0.2",
-    "nyc": "^14.1.1"   
+    "why-is-node-running": "^2.1.0"
   }
 }
