@@ -21,6 +21,7 @@ class Shorty {
     this.mongoose = require("mongoose");
     this.em = new Emitter();
     this.port = port;
+
   }
 
   async startup() {
@@ -43,30 +44,23 @@ class Shorty {
 
       this.app.use("/", this.url);
       // Shutdown on event:
-      this.em.on("serverShutdown", () => {
+      this.em.on("shutdown", () => {
         this.shutdown();
       });
       // Fire up listen, keep the return val around (used in shutdown)
       this.runningApp = await this.app.listen(this.port);
       console.log("We're up and running");
-      this.em.emit("serverStarted", "Server is started");
+      this.em.emit("started", "Server is started");
     } catch (err) {
       // failed to listen.
       console.warn("Failed to start express: ", err);
     }
   }
   async shutdown() {
-    this.runningApp.close();
-    //    console.log(this.mongoose);
-    //   this.mongoose.close();
-    // this.db.disconnect();
-    setTimeout(() => {
-      this.mongoose.disconnect(), 500;
-    });
-    setTimeout(() => {
-      console.warn("Failing to exit cleanly.");
-      process.exit(1);
-    }, 3000);
+    await this.runningApp.close();
+    await this.mongoose.disconnect();
+
+    // If we don't shutdown here, consider calling log() and examine the output.
   }
 }
 

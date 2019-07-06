@@ -9,18 +9,27 @@ should();
 const Shorty = require("../shorty");
 const server = new Shorty(2000);
 
+const Url = require('../models/url.model');
+
+const testObject = { key: 'snaffel', url: 'https://www.snaffel.net/' };
+const altUrl = 'https://vaffel.net';
+
 describe("Tests", function() {
   before("Set up a server", function(done) {
     // runs before all tests in this block
     server.startup();
-    server.em.on("serverStarted", function() {
+    server.em.on("started", function() {
       done();
+      // Delete the test object to make sure it doesn't interfere.
+      Url.deleteOne( { key:testObject.key });
     });
   });
 
   after("Shut down the server", function() {
-    // runs after all tests in this block
-    server.em.emit("serverShutdown", "Requesting shutdown");
+    // Make sure the test object is gone.
+    Url.deleteOne( { key:testObject.key });
+
+    server.em.emit("shutdown", "Requesting shutdown");
   });
 
   beforeEach(function() {
@@ -39,8 +48,7 @@ describe("Tests", function() {
     it("should check if the server is answering HTTP requests to / with 404", function(done) {
       target
         .get("/")
-        .expect(404)
-        .end(function(err, res) {
+        .end( (err,res) => {
           res.status.should.equal(404);
           done();
         });
@@ -51,35 +59,60 @@ describe("Tests", function() {
     it("should add a URL to shorty and get a 200 ok back", function(done) {
       target
         .post("/create")
-        .send({ key: "snaffel", url: "https://www.snaffel.net/" })
-        .expect(200)
-        .end(function(err, res) {
-          res.status.should.equal(200);
-          done();
+        .send(testObject)
+        .end( (err,res) => {
+          res.status.should.be.equal(200);
+          res.body.key.should.be.equal(testObject.key);
+          res.body.url.should.be.equal(testObject.url);
+        done();
         });
     });
   });
 
+  describe("Re-Add a existing URL", function() {
+    it("should add a URL to shorty and get a 409 conflict", function(done) {
+      target
+        .post("/create")
+        .send(testObject)
+        .end( (err,res) => {
+          res.status.should.equal(409);
+          done();
+        });
+    });
+  });
   describe("Fetch a URL", function() {
     it("should fetch the URL we created above", function(done) {
       target
-        .get("/snaffel")
-        .expect(200)
-        .end(function(err, res) {
-          res.status.should.equal(302);
-          done();
-        });
+      .get("/snaffel")
+      .end( (err,res) => {
+        res.status.should.equal(301);
+        res.header.location.should.be.equal(testObject.url);
+        done();
+      });
+    });
+  });
+
+  describe("Fetch a non-exiting URL", function() {
+    it("should try to fetch URL and fail", function(done) {
+      target
+      .get("/98oooooooooooo")
+      .end( (err, res) => {
+        res.status.should.equal(404);
+        done();
+      });
     });
   });
 
   describe("Update an URL", function() {
-    it("should change the URL to vaffel", function(done) {
+    it("should change the URL to " + altUrl, function(done) {
       target
         .put("/snaffel/update")
-        .send({ key: "snaffel", url: "https://vaffel.net/" })
-        .expect(200)
-        .end(function(err, res) {
-          res.status.should.equal(200);
+        .send({ key: testObject.key, url: altUrl})
+        .end( (err, res) => {
+          console.log("Body:", res.body);
+          res.status.should.be.equal(200);
+//        res.body.ok.should.be(1);
+//        res.body.nModified.should.be(1);
           done();
         });
     });
@@ -88,13 +121,12 @@ describe("Tests", function() {
   describe("Delete an URL", function() {
     it("should delete the URL from the service", function(done) {
       target
-        .delete('/snaffel/delete')
+        .delete("/snaffel/delete")
         .expect(200)
-        .end(function(err,res) {
+        .end(function(err, res) {
           res.status.should.equal(200);
-          done();          
-        })
+          done();
+        });
     });
-
-  })
+  });
 });
