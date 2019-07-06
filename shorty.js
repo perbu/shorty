@@ -1,15 +1,15 @@
 "use strict";
 
 /*
-* Todo:
-* Add users, auth, authz
-* Login with Twitter
-* Make it proper HTTP, use redirects.
-* 
-*/
+ * Todo:
+ * Add users, auth, authz
+ * Login with Twitter
+ * Make it proper HTTP, use redirects.
+ *
+ */
+const log = require("why-is-node-running");
 
-
-const Emitter = require('events').EventEmitter;
+const Emitter = require("events").EventEmitter;
 
 class Shorty {
   constructor(port) {
@@ -29,40 +29,45 @@ class Shorty {
       const dev_db_url = "mongodb://localhost/shorty";
       const mongoDB = process.env.MONGODB_URI || dev_db_url;
 
-      this.mongoose.connect(mongoDB, { useNewUrlParser: true });
+      this.db = this.mongoose.connect(mongoDB, { useNewUrlParser: true });
       this.mongoose.Promise = global.Promise;
-      this.db = this.mongoose.connection;
-      this.em.emit('dbconnOK','Database connection established OK');
-    } catch(err) {
+      //      this.db = this.mongoose.connection;
+      this.em.emit("dbconnOK", "Database connection established OK");
+    } catch (err) {
       console.warn(err);
       process.exit(1);
     }
-    try { 
+    try {
       this.app.use(this.bodyParser.json());
       this.app.use(this.bodyParser.urlencoded({ extended: false }));
 
       this.app.use("/", this.url);
       // Shutdown on event:
-      this.em.on('serverShutdown', () => { this.shutdown() });
+      this.em.on("serverShutdown", () => {
+        this.shutdown();
+      });
       // Fire up listen, keep the return val around (used in shutdown)
       this.runningApp = await this.app.listen(this.port);
       console.log("We're up and running");
-      this.em.emit('serverStarted','Server is started');
-
-     } catch (err) {
-        // failed to listen.
-        console.warn("Failed to start express: ", err);
-      }
+      this.em.emit("serverStarted", "Server is started");
+    } catch (err) {
+      // failed to listen.
+      console.warn("Failed to start express: ", err);
+    }
   }
   async shutdown() {
     this.runningApp.close();
-
-    setTimeout(() =>{ 
+    //    console.log(this.mongoose);
+    //   this.mongoose.close();
+    // this.db.disconnect();
+    setTimeout(() => {
+      this.mongoose.disconnect(), 500;
+    });
+    setTimeout(() => {
       console.warn("Failing to exit cleanly.");
-      process.exit(1) }, 1000);
-    
+      process.exit(1);
+    }, 3000);
   }
 }
-
 
 module.exports = Shorty;
