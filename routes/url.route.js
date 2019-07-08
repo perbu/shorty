@@ -4,12 +4,15 @@ const express = require('express');
 const router = express.Router();
 
 const url_controller = require('../controllers/url.controller');
+const user_controller = require('../controllers/user.controller');
+
 
 
 // a simple test url to check that all of our files are communicating correctly.
 
 
-router.get('/test', url_controller.test);
+router.post('/login', user_controller.login);
+
 
 router.post('/create', url_controller.url_create);
 
