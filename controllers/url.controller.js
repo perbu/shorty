@@ -6,10 +6,6 @@
 
 const Url = require('../models/url.model');
 
-//Simple version, without validation or sanitation
-exports.test = function (req, res,next) {
-    res.send( JSON.stringify({'message':'Greetings from the Test controller!'}));
-};
 
 exports.url_create = function (req, res, next) {
     var url = new Url( { key: req.body.key, url: req.body.url } );
@@ -21,7 +17,8 @@ exports.url_create = function (req, res, next) {
             res.status(409);
             res.send("Conflict - key already exists");
         } else {
-            res.send(err);
+            // Throw error to middleware.
+            next(err);
         }
     });
 };
@@ -50,7 +47,6 @@ exports.url_update = function (req, res, next) {
 };
 
 exports.url_delete = function (req, res, next) {
-
     Url.deleteOne({'key': req.params.key}, function (err) {
         if (err) return next(err);
         res.send({'message':'Deleted successfully'});
