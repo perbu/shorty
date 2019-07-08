@@ -13,6 +13,7 @@ const Url = require('../models/url.model');
 
 const testObject = { key: 'snaffel', url: 'https://www.snaffel.net/' };
 const altUrl = 'https://vaffel.net';
+const loginTestUser = { username:'per.buer@gmail.com', password:'123' };
 
 describe("Tests", function() {
   before("Set up a server", function(done) {
@@ -44,8 +45,8 @@ describe("Tests", function() {
 
   // UNIT test begin
 
-  describe("Basic HTTP connection", function() {
-    it("should check if the server is answering HTTP requests to / with 404", function(done) {
+  describe("Basic HTTP connection", () => {
+    it("should check if the server is answering HTTP requests to / with 404", (done) => {
       target
         .get("/")
         .end( (err,res) => {
@@ -55,7 +56,21 @@ describe("Tests", function() {
     });
   });
 
-  describe("Add a URL", function() {
+
+  describe("Logging in user", () => {
+    it("should check that we can login to the service with username and password", (done) => {
+      target
+        .post("/login")
+        .send( loginTestUser )
+        .end( (err,res) => {
+          res.status.should.equal(200);
+          done();
+        });
+    });
+  });
+
+
+  describe("Add a URL", () => {
     it("should add a URL to shorty and get a 200 ok back", function(done) {
       target
         .post("/create")
@@ -69,7 +84,7 @@ describe("Tests", function() {
     });
   });
 
-  describe("Re-Add a existing URL", function() {
+  describe("Re-Add a existing URL", () => {
     it("should add a URL to shorty and get a 409 conflict", function(done) {
       target
         .post("/create")
