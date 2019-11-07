@@ -7,7 +7,7 @@
 const Url = require('../models/url.model');
 
 
-exports.url_create = function (req, res, next) {
+exports.url_create =  (req, res, next) => {
     var url = new Url( { key: req.body.key, url: req.body.url } );
     url.save()
     .then( (url) => {  res.send(url); })

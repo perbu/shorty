@@ -3,17 +3,30 @@
 const User = require("../models/user.model");
 
 // Our own auth driver.
-const passport = require("../config/auth");
+const auth = require("../config/auth");
+
+exports.nop = (req, res, next) => {
+  console.log("This is the User controller activly doing nothing....");
+  return next();
+};
 
 exports.login = (req, res, next) => {
-    console.log("User login controller invoked...");
-    console.log(req.body);
+    // deconstruct into local vars:
+  const { username, password } = req.body;
 
-  const username = req.body.username;
-  const password = req.body.password;
+  console.log(
+    "User login controller invoked... for ",
+    username, 
+    " with password ",
+    password
+  );
+    const cb = (what)=> {console.log("what: ", what)};
+    const a = auth.authenticate("local", { failureRedirect: "/login" }, cb );
 
-  passport.authenticate("local", { failureRedirect: "/" });
+  console.log( "auth:", a );
+//  console.log( "auth:", a() );
+  
+  return res.send("Hello there");
 
-  console.log("Logging in...", username, ' with password ', password);
-
+  console.log("Logging in...", username, " with password ", password);
 };

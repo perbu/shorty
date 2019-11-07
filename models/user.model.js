@@ -28,6 +28,10 @@ const UserSchema = new Schema({
 
 UserSchema.method({});
 
+UserSchema.verifyPassword = (password) => {
+  return( password === this.password ? true : false);
+}
+
 /**
  * Statics
  */

@@ -64,6 +64,7 @@ describe("Tests", function() {
         .send( loginTestUser )
         .end( (err,res) => {
           res.status.should.equal(200);
+          res.location.should.equal('/');
           done();
         });
     });
